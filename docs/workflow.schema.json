@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-fleet.local/schema/workflow-v1.json",
+  "title": "Agent Fleet Workflow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "name", "nodes", "edges"],
+  "properties": {
+    "version": { "const": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "project": { "type": "string" },
+    "concurrency": { "type": "integer", "minimum": 1, "default": 3 },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/agentTask" },
+          { "$ref": "#/$defs/parallelGroup" },
+          { "$ref": "#/$defs/approval" },
+          { "$ref": "#/$defs/aggregate" }
+        ]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "order"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "order": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "baseNode": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" },
+        "type": { "type": "string" },
+        "label": { "type": "string" },
+        "timeoutSeconds": { "type": "integer", "minimum": 1 },
+        "retries": { "type": "integer", "minimum": 0, "default": 0 },
+        "failFast": { "type": "boolean", "default": false }
+      }
+    },
+    "agentTask": {
+      "allOf": [
+        { "$ref": "#/$defs/baseNode" },
+        {
+          "type": "object",
+          "required": ["agent", "prompt", "access"],
+          "properties": {
+            "type": { "const": "agent-task" },
+            "agent": { "enum": ["codex", "claude", "kimi-code", "qwen", "gemini"] },
+            "model": { "type": "string" },
+            "prompt": { "type": "string", "minLength": 1 },
+            "workingDirectory": { "type": "string" },
+            "access": { "enum": ["read-only", "write-worktree"] },
+            "arguments": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      ]
+    },
+    "parallelGroup": {
+      "allOf": [
+        { "$ref": "#/$defs/baseNode" },
+        { "type": "object", "properties": { "type": { "const": "parallel-group" } } }
+      ]
+    },
+    "approval": {
+      "allOf": [
+        { "$ref": "#/$defs/baseNode" },
+        {
+          "type": "object",
+          "required": ["message"],
+          "properties": { "type": { "const": "approval" }, "message": { "type": "string" } }
+        }
+      ]
+    },
+    "aggregate": {
+      "allOf": [
+        { "$ref": "#/$defs/baseNode" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "aggregate" },
+            "strategy": { "enum": ["deterministic", "agent"], "default": "deterministic" },
+            "agent": { "enum": ["codex", "claude", "kimi-code", "qwen", "gemini"] }
+          }
+        }
+      ]
+    }
+  }
+}

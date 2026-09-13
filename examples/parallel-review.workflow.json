@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "name": "Parallel review",
+  "concurrency": 3,
+  "nodes": [
+    {
+      "id": "review_codex",
+      "type": "agent-task",
+      "label": "Codex review",
+      "agent": "codex",
+      "prompt": "Review the selected change for correctness and testing gaps.",
+      "access": "read-only"
+    },
+    {
+      "id": "review_claude",
+      "type": "agent-task",
+      "label": "Claude review",
+      "agent": "claude",
+      "prompt": "Independently review the selected change and identify risks.",
+      "access": "read-only"
+    },
+    {
+      "id": "review_kimi",
+      "type": "agent-task",
+      "label": "Kimi review",
+      "agent": "kimi-code",
+      "prompt": "Review the selected change, focusing on a distinct third perspective.",
+      "access": "read-only"
+    },
+    {
+      "id": "combine",
+      "type": "aggregate",
+      "label": "Combine findings",
+      "strategy": "deterministic"
+    },
+    {
+      "id": "approve",
+      "type": "approval",
+      "label": "Approve next action",
+      "message": "Review the combined findings before any write task is added."
+    }
+  ],
+  "edges": [
+    { "from": "review_codex", "to": "combine", "order": 0 },
+    { "from": "review_claude", "to": "combine", "order": 1 },
+    { "from": "review_kimi", "to": "combine", "order": 2 },
+    { "from": "combine", "to": "approve", "order": 0 }
+  ]
+}

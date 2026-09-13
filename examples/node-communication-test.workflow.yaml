@@ -1,0 +1,62 @@
+version: 1
+name: 节点通信测试
+concurrency: 2
+
+nodes:
+  - id: codex_color
+    type: agent-task
+    label: Codex：红色
+    agent: codex
+    access: read-only
+    position:
+      x: 80
+      y: 80
+    prompt: >-
+      请只输出一行：Codex 认为最佳颜色是红色。不要执行任何工具。
+
+  - id: claude_color
+    type: agent-task
+    label: Claude：蓝色
+    agent: claude
+    access: read-only
+    position:
+      x: 80
+      y: 220
+    prompt: >-
+      请只输出一行：Claude 认为最佳颜色是蓝色。不要执行任何工具。
+
+  - id: combine_colors
+    type: aggregate
+    label: 汇总颜色
+    position:
+      x: 420
+      y: 220
+
+  - id: pi_verify
+    type: agent-task
+    label: Pi：验证结果
+    agent: pi
+    access: read-only
+    position:
+      x: 720
+      y: 220
+    prompt: >-
+      读取 Upstream results。列出其中提到的 Agent 和颜色，然后只输出一个 JSON
+      对象，格式为 {"Codex":"颜色","Claude":"颜色"}。
+      不要执行任何工具。
+
+edges:
+  - id: codex-to-combine
+    from: codex_color
+    to: combine_colors
+    order: 0
+
+  - id: claude-to-combine
+    from: claude_color
+    to: combine_colors
+    order: 1
+
+  - id: combine-to-pi
+    from: combine_colors
+    to: pi_verify
+    order: 0
