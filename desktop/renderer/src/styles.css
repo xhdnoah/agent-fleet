@@ -142,6 +142,11 @@ button, input, textarea, select { font: inherit; }
 .run-strip strong, .run-strip span.completed { color: #527a49; }
 .run-strip span { border-color: #d3d8ce; }
 .run-strip span.failed { color: #a35648; }
+.approval-actions { position: absolute; right: 18px; bottom: 18px; z-index: 8; padding: 10px; color: #191919; background: #fff; border: 1px solid #191919; box-shadow: 0 5px 18px #0002; }
+.approval-actions > div { display: flex; align-items: center; gap: 8px; }
+.approval-actions span { margin-right: 6px; font-size: 11px; }
+.approval-actions button { padding: 6px 9px; color: #fff; background: #191919; border: 1px solid #191919; border-radius: 4px; cursor: pointer; }
+.approval-actions button.reject { color: #a1261d; background: #fff; border-color: #a1261d; }
 .error { color: #8b4237; background: #fff1ed; border-color: #d5a197; box-shadow: 0 5px 18px #7b41351c; }
 .inspector label { color: #626d61; }
 .inspector input, .inspector textarea, .inspector select { color: #313b31; background: #fffefa; border-color: #cbd2c7; }
@@ -366,6 +371,7 @@ body { font-size: 14px; }
 .session-summary h3 { margin: 4px 0 6px; font-size: 18px; }
 .session-summary code { color: #666; font-size: 9px; }
 .session-summary button { padding: 8px 11px; color: #fff; background: #191919; border: 1px solid #191919; border-radius: 5px; cursor: pointer; }
+.session-legacy { padding: 7px 9px; color: #666; background: #f1f1ef; border-radius: 5px; font-size: 10px; }
 .session-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
 .session-facts div { padding: 10px; background: #f7f7f5; border: 1px solid #d3d3d0; border-radius: 5px; }
 .session-facts dt { color: #666; font-size: 10px; }

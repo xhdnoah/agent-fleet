@@ -39,4 +39,22 @@ export class RunStore {
         .sort((left, right) => String(right.createdAt ?? "").localeCompare(String(left.createdAt ?? "")));
     } catch (error) { if (error.code === "ENOENT") return []; throw error; }
   }
+
+  async markInterrupted() {
+    const runs = await this.list();
+    const activeStatuses = ["running", "queued", "waiting-approval"];
+    const interrupted = runs.filter((run) => run.status === "running" || Object.values(run.nodes ?? {}).some((node: any) => activeStatuses.includes(node.status)));
+    await Promise.all(interrupted.map((run) => this.save({
+      ...run,
+      status: run.status === "running" ? "failed" : run.status,
+      error: run.error ?? "后台服务退出，运行已中断",
+      updatedAt: new Date().toISOString(),
+      nodes: Object.fromEntries(Object.entries(run.nodes ?? {}).map(([id, node]: [string, any]) => [id,
+        activeStatuses.includes(node.status)
+          ? { ...node, status: node.status === "queued" ? "skipped" : "failed", error: node.status === "queued" ? "上游节点失败，未执行" : "后台服务退出，节点已中断", endedAt: new Date().toISOString() }
+          : node
+      ]))
+    })));
+    return interrupted.length;
+  }
 }

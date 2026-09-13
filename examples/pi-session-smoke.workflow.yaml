@@ -1,0 +1,14 @@
+version: 1
+name: Pi 会话冒烟测试
+concurrency: 1
+nodes:
+  - id: pi_smoke
+    type: agent-task
+    label: Pi 冒烟测试
+    agent: pi
+    prompt: 只回复 FLEET-SESSION-OK，不要调用工具。
+    access: read-only
+    position:
+      x: 180
+      y: 180
+edges: []

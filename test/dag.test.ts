@@ -20,6 +20,16 @@ test("cycles are rejected", () => {
   assert.throws(() => validateWorkflow({ nodes: [{ id: "a" }, { id: "b" }], edges: [{ from: "a", to: "b" }, { from: "b", to: "a" }] }), /cycle/);
 });
 
+test("failure propagates through every downstream node regardless of declaration order", async () => {
+  const workflow = {
+    nodes: [{ id: "c" }, { id: "b" }, { id: "a" }],
+    edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }]
+  };
+  const runner = new DagRunner({ execute: async (node) => { if (node.id === "a") throw new Error("boom"); return node.id; } });
+  const result = await runner.run(workflow);
+  assert.deepEqual(new Set(result.failed), new Set(["a", "b", "c"]));
+});
+
 test("checkpointed nodes are not rerun", async () => {
   const called = [];
   const runner = new DagRunner({ execute: async (node, inputs) => { called.push(node.id); return inputs.join(""); } });

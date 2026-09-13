@@ -55,7 +55,15 @@ export class DagRunner {
     };
 
     while (pending.size || running.size) {
-      for (const id of [...pending]) if (blocked(id)) { pending.delete(id); failed.add(id); }
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const id of [...pending]) if (blocked(id)) {
+          pending.delete(id);
+          failed.add(id);
+          changed = true;
+        }
+      }
       for (const id of [...pending]) {
         if (running.size >= this.concurrency) break;
         if (ready(id)) start(id);

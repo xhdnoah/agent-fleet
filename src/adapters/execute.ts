@@ -93,11 +93,14 @@ export async function runProcessSpec(spec: LaunchSpec, { signal, onEvent = () =>
   });
   const usage: Record<string, number> = {};
   let finalText = "";
-  let lastError = "";
+  const errorLines: string[] = [];
 
   const emitLine = (stream: "stdout" | "stderr", line: string) => {
     const safeLine = redactText(line);
-    if (stream === "stderr" && safeLine.trim()) lastError = safeLine.trim();
+    if (stream === "stderr" && safeLine.trim()) {
+      errorLines.push(safeLine.trim());
+      if (errorLines.length > 20) errorLines.shift();
+    }
     let parsed: any;
     try { parsed = JSON.parse(safeLine); } catch {}
     if (parsed) {
@@ -136,7 +139,7 @@ export async function runProcessSpec(spec: LaunchSpec, { signal, onEvent = () =>
     endedAt,
     durationMs: Date.parse(endedAt) - Date.parse(startedAt),
     output: finalText,
-    error: outcome.code === 0 ? undefined : lastError || `进程退出码：${outcome.code}`,
+    error: outcome.code === 0 ? undefined : errorLines.join("\n") || `进程退出码：${outcome.code}`,
     usage: Object.keys(usage).length ? { values: usage, source: "agent-reported", confidence: "reported" } : null
   };
 }

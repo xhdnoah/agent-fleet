@@ -31,6 +31,7 @@ export async function startDaemon({ dataDir = defaultDataDir() } = {}) {
   const state = await loadState(statePath);
   const installations = await discoverAgents();
   const runStore = new RunStore(dataDir);
+  await runStore.markInterrupted();
   const workflows = new WorkflowService({
     store: runStore,
     installations,

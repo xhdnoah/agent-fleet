@@ -68,14 +68,24 @@ export class WorkflowService {
             state.prompt = prompt;
             const events: any[] = [];
             state.events = events;
-            result = await this.executeAgent({ ...node, prompt }, installation, {
-              signal: controller.signal,
-              onEvent: async (event) => {
-                events.push(event);
-                state.lastEvent = event;
-                state.eventCount = events.length;
-              }
-            });
+            const nodeController = new AbortController();
+            const abortNode = () => nodeController.abort();
+            controller.signal.addEventListener("abort", abortNode, { once: true });
+            const timeoutMs = Math.min(Math.max(Number(node.timeoutMs) || 600_000, 10_000), 3_600_000);
+            const timeout = setTimeout(() => nodeController.abort(), timeoutMs);
+            try {
+              result = await this.executeAgent({ ...node, prompt }, installation, {
+                signal: nodeController.signal,
+                onEvent: async (event) => {
+                  events.push(event);
+                  state.lastEvent = event;
+                  state.eventCount = events.length;
+                }
+              });
+            } finally {
+              clearTimeout(timeout);
+              controller.signal.removeEventListener("abort", abortNode);
+            }
             run.results[node.id] = result;
             state.usage = result.usage;
             state.exitCode = result.exitCode;
@@ -101,6 +111,14 @@ export class WorkflowService {
     const outcome = await runner.run(workflow);
     run.results = outcome.results;
     run.failed = outcome.failed;
+    for (const nodeId of outcome.failed) {
+      const state = run.nodes[nodeId];
+      if (state?.status === "queued") {
+        state.status = "skipped";
+        state.error = "上游节点失败，未执行";
+        state.endedAt = this.now();
+      }
+    }
     run.status = controller.signal.aborted ? "cancelled" : outcome.failed.length ? "failed" : "completed";
     run.updatedAt = this.now();
     await this.store.save(run);

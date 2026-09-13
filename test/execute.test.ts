@@ -34,8 +34,8 @@ test("extracts final text from Codex item events", async () => {
 });
 
 test("surfaces the last stderr line when an agent process fails", async () => {
-  const script = 'console.error("Claude authentication failed"); process.exit(1)';
+  const script = 'console.error("Claude authentication failed"); console.error("See log: /tmp/agent.log"); process.exit(1)';
   const result = await runProcessSpec({ command: process.execPath, args: ["-e", script] });
   assert.equal(result.status, "failed");
-  assert.equal(result.error, "Claude authentication failed");
+  assert.equal(result.error, "Claude authentication failed\nSee log: /tmp/agent.log");
 });
