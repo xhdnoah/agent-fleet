@@ -97,14 +97,14 @@ export async function inspectAgentAuth(installation) {
   if (!installation?.installed || !installation.path) return { state: "not-installed", verified: false };
   if (installation.id === "codex") {
     const result = await capture(installation.path, ["login", "status"], { timeoutMs: 5000 });
-    return { state: result.ok ? "authenticated" : "not-authenticated", verified: result.ok };
+    return { state: result.ok ? "authenticated" : "not-authenticated", verified: result.ok, configPath: join(homedir(), ".codex", "config.toml") };
   }
-  if (installation.id === "claude") return verifyClaudeAuth(installation.path);
+  if (installation.id === "claude") return { ...(await verifyClaudeAuth(installation.path)), configPath: join(homedir(), ".claude", "settings.json") };
   const configPath = installation.id === "kimi-code"
     ? join(process.env.KIMI_CODE_HOME || join(homedir(), ".kimi-code"), "config.toml")
     : installation.id === "qwen" ? join(homedir(), ".qwen", "settings.json")
       : installation.id === "pi" ? join(homedir(), ".pi", "agent", "auth.json") : null;
   if (!configPath) return { state: "unsupported", verified: false };
-  try { await access(configPath); return { state: "configured", verified: false, detail: configPath }; }
-  catch { return { state: "not-configured", verified: false, detail: configPath }; }
+  try { await access(configPath); return { state: "configured", verified: false, configPath }; }
+  catch { return { state: "not-configured", verified: false, configPath }; }
 }
